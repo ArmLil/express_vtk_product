@@ -30,27 +30,6 @@ module.exports = (sequelize, DataTypes) => {
       tableName: "users"
     }
   );
-  User.associate = function(models) {
-    User.hasMany(models.Article, {
-      as: "articles",
-      foreignKey: "userId"
-    });
-    User.hasMany(models.Chatroom, {
-      as: "createdChatrooms",
-      foreignKey: "creatorId"
-    });
-    User.belongsToMany(models.Chatroom, {
-      through: "User_chatroom_numberOfUnreadMessages",
-      as: "rooms_with_unread_messages",
-      foreignKey: "memberId",
-      otherKey: "chatroomId"
-    });
-    User.belongsToMany(models.Chatroom, {
-      through: "MembersChatrooms",
-      as: "roomsWhereUserIsMember",
-      foreignKey: "memberId",
-      otherKey: "chatroomId"
-    });
-  };
+  User.associate = function(models) {};
   return User;
 };

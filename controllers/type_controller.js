@@ -2,28 +2,14 @@
 
 let db = require("../models");
 
-async function getArticles(req, res) {
+async function getTypes(req, res) {
+  console.log("function getTypes");
   try {
-    let articles = await db.Article.findAndCountAll({
-      include: [
-        {
-          model: db.User,
-          as: "user"
-        }
-      ]
-    });
-
-    let count = articles.count;
-
-    articles = articles.rows.map(article => {
-      if (article.dataValues.user) {
-        delete article.dataValues.user.dataValues.password;
-      }
-      return article;
-    });
+    let types = await db.Type.findAndCountAll();
+    let count = types.count;
 
     res.json({
-      articles,
+      types,
       count
     });
   } catch (error) {
@@ -34,26 +20,15 @@ async function getArticles(req, res) {
   }
 }
 
-async function getArticleById(req, res) {
-  console.log("function getArticleById");
+async function getTypeById(req, res) {
+  console.log("function getTypeById");
   try {
-    let article = await db.Article.findByPk(req.params.id, {
-      include: [
-        {
-          model: db.User,
-          as: "user"
-        }
-      ]
-    });
-    if (!article) {
-      throw new Error("validationError: Article with this id is not found!");
+    let type = await db.Type.findByPk(req.params.id);
+    console.log(type);
+    if (type == null) {
+      throw new Error("validationError: Type with this id not found!");
     }
-
-    if (article.dataValues.user) {
-      delete article.dataValues.user.dataValues.password;
-    }
-
-    res.json({ article });
+    res.json({ type });
   } catch (error) {
     console.error(error);
     res.json({
@@ -62,39 +37,40 @@ async function getArticleById(req, res) {
   }
 }
 
-async function createArticle(req, res) {
-  console.log("function createArticle");
+async function createType(req, res) {
+  console.log("function createType");
   try {
-    const articles = await db.Article.findAndCountAll();
-
-    if (articles.count !== 0) {
-      const findArticleByTitle = await db.Article.findOne({
-        where: { title: req.body.title }
-      });
-      if (findArticleByTitle) {
-        throw new Error(
-          "validationError: Article with this title already exists!"
-        );
-      }
-    }
-    let user_id;
-    if (req.user) {
-      user_id = req.user.data.id;
-    } else if (req.body.user_id) {
-      user_id = req.body.user_id;
-    }
+    const types = await db.Type.findAndCountAll();
 
     let options = {};
-    if (req.body.title) options.title = req.body.title;
-    if (req.body.content) options.content = req.body.content;
-    if (req.body.author) options.author = req.body.author;
-    options.user_id = user_id;
+    if (req.body.number) {
+      options.number = req.body.number;
+    } else {
+      return res.status(400).send("Bad Request, number is required");
+    }
+    if (req.body.name) {
+      options.name = req.body.name;
+    } else {
+      return res.status(400).send("Bad Request, name is required");
+    }
 
-    const article = await db.Article.findOrCreate({
+    const findTypeByName = await db.Type.findOne({
+      where: { name: req.body.name }
+    });
+    if (findTypeByName) {
+      throw new Error("validationError: тип с таким названием уже существует");
+    }
+    const findTypeByNumber = await db.Type.findOne({
+      where: { number: req.body.number }
+    });
+    if (findTypeByNumber) {
+      throw new Error("validationError: тип с таким номером уже существует");
+    }
+    const type = await db.Type.findOrCreate({
       where: options
     });
 
-    res.json({ article });
+    res.json({ type });
   } catch (error) {
     console.error(error);
     res.json({
@@ -103,46 +79,54 @@ async function createArticle(req, res) {
   }
 }
 
-async function updateArticle(req, res) {
-  console.log("function updateArticle");
+async function updateType(req, res) {
+  console.log("function updateType");
   try {
-    const article = await db.Article.findByPk(req.params.id);
-    if (!article)
-      throw new Error("validationError: Article by this id is not found!");
+    const type = await db.Type.findByPk(req.params.id);
+    if (type == null)
+      throw new Error("validationError: Type by this id not found!");
 
-    //check title
-    //do not let the article to be updated with a title which already exists
-    const findArticleByTitle = await db.Article.findOne({
-      where: { title: req.body.title }
-    });
-    if (article.title !== req.body.title && findArticleByTitle) {
-      throw new Error(
-        "validationError: Article with this title already exists!"
-      );
+    if (req.body.name && type.name != req.body.name) {
+      //check name
+      //do not let the type to be updated with a name which already exists
+      const findTypeByName = await db.Type.findOne({
+        where: { name: req.body.name }
+      });
+      if (type.name !== req.body.name && findTypeByName) {
+        throw new Error(
+          "validationError: тип с таким названием уже существует!"
+        );
+      }
+      type.name = req.body.name;
     }
 
-    if (req.body.title) article.title = req.body.title;
-    if (req.body.content) article.content = req.body.content;
-    if (req.body.author) article.author = req.body.author;
-    if (req.body.user_id) article.user_id = req.body.user_id;
+    if (req.body.number && type.number != req.body.number) {
+      const findTypeByNumber = await db.Type.findOne({
+        where: { number: req.body.number }
+      });
+      if (type.number !== req.body.number && findTypeByNumber) {
+        throw new Error("validationError: тип с таким номером уже существует!");
+      }
+      type.number = req.body.number;
+    }
 
-    await article.save();
-    res.json({ article });
+    await type.save();
+    res.json({ type });
   } catch (err) {
     console.error(err);
     res.json({ errorMessage: err.message });
   }
 }
 
-async function deleteArticle(req, res) {
-  console.log("function deleteArticles");
+async function deleteType(req, res) {
+  console.log("function deleteTypes");
   try {
-    const article = await db.Article.findByPk(req.params.id);
-    if (!article) {
-      throw new Error("validationError: Article by this id is not found!");
+    const type = await db.Type.findByPk(req.params.id);
+    if (!type) {
+      throw new Error("validationError: Type by this id is not found!");
     }
-    await article.destroy();
-    res.json({ massage: `article ${article.title}, ${article.id} is deleted` });
+    await type.destroy();
+    res.json({ massage: `type with id ${type.id} is deleted` });
   } catch (error) {
     console.error(error);
     res.json({ errorMessage: error.message });
@@ -150,9 +134,9 @@ async function deleteArticle(req, res) {
 }
 
 module.exports = {
-  getArticles,
-  getArticleById,
-  createArticle,
-  updateArticle,
-  deleteArticle
+  getTypes,
+  getTypeById,
+  createType,
+  updateType,
+  deleteType
 };
