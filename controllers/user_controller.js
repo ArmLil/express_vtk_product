@@ -28,21 +28,7 @@ async function getUserById(req, res) {
   console.log("function getUserById");
   try {
     let user = await db.User.findByPk(req.params.id, {
-      attributes: { exclude: ["password"] },
-      include: [
-        {
-          model: db.Chatroom,
-          as: "createdChatrooms"
-        },
-        {
-          model: db.Chatroom,
-          as: "roomsWhereUserIsMember"
-        }
-        // {
-        //   model: db.Chatroom,
-        //   as: "rooms_with_unread_messages"
-        // }
-      ]
+      attributes: { exclude: ["password"] }
     });
 
     res.json({ user });
