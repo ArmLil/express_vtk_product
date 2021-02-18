@@ -1,17 +1,15 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
-  const Type = sequelize.define(
-    "Type",
+  const Naming = sequelize.define(
+    "Naming",
     {
-      number: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        unique: true
-      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
+      },
+      typeId: {
+        type: DataTypes.INTEGER
       },
       note: DataTypes.TEXT
     },
@@ -19,18 +17,19 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       paranoid: true,
       underscored: false,
-      tableName: "Types"
+      tableName: "Namings"
     }
   );
-  Type.associate = function(models) {
-    Type.hasMany(models.Product, {
+  Naming.associate = function(models) {
+    Naming.hasMany(models.Product, {
       as: "products",
-      foreignKey: "typeId"
+      foreignKey: "namingId"
     });
-    Type.hasMany(models.Naming, {
-      as: "namings",
+    Naming.belongsTo(models.Type, {
+      as: "type",
+      targetKey: "id",
       foreignKey: "typeId"
     });
   };
-  return Type;
+  return Naming;
 };

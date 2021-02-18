@@ -1,7 +1,7 @@
 "use strict";
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.createTable("Locations", {
+    return queryInterface.createTable("Namings", {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -9,12 +9,16 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       name: {
-        type: Sequelize.STRING,
-        allowNull: false
+        type: Sequelize.STRING
       },
-      number: {
+      typeId: {
         type: Sequelize.INTEGER,
-        allowNull: false
+        references: {
+          model: "Types", // name of Target model
+          key: "id" // key in Target model that we're referencing
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       note: {
         type: Sequelize.TEXT
@@ -34,6 +38,6 @@ module.exports = {
     });
   },
   down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable("Locations");
+    return queryInterface.dropTable("Namings");
   }
 };

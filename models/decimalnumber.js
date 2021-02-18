@@ -1,15 +1,10 @@
 "use strict";
 module.exports = (sequelize, DataTypes) => {
-  const Location = sequelize.define(
-    "Location",
+  const DecimalNumber = sequelize.define(
+    "DecimalNumber",
     {
       name: {
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true
-      },
-      number: {
-        type: DataTypes.INTEGER,
         allowNull: false,
         unique: true
       },
@@ -19,14 +14,14 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
       paranoid: true,
       underscored: false,
-      tableName: "Locations"
+      tableName: "DecimalNumbers"
     }
   );
-  Location.associate = function(models) {
-    Location.hasMany(models.Product, {
+  DecimalNumber.associate = function(models) {
+    DecimalNumber.hasMany(models.Product, {
       as: "products",
-      foreignKey: "locationId"
+      foreignKey: "decimalNumberId"
     });
   };
-  return Location;
+  return DecimalNumber;
 };

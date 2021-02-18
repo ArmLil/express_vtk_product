@@ -40,18 +40,16 @@ async function getTypeById(req, res) {
 async function createType(req, res) {
   console.log("function createType");
   try {
-    const types = await db.Type.findAndCountAll();
-
     let options = {};
     if (req.body.number) {
       options.number = req.body.number;
     } else {
-      return res.status(400).send("Bad Request, number is required");
+      return res.status(400).send("Bad Request, number required");
     }
     if (req.body.name) {
       options.name = req.body.name;
     } else {
-      return res.status(400).send("Bad Request, name is required");
+      return res.status(400).send("Bad Request, name required");
     }
 
     const findTypeByName = await db.Type.findOne({
@@ -66,6 +64,9 @@ async function createType(req, res) {
     if (findTypeByNumber) {
       throw new Error("validationError: тип с таким номером уже существует");
     }
+
+    if (req.body.note) options.note = req.body.note;
+
     const type = await db.Type.findOrCreate({
       where: options
     });
@@ -83,8 +84,9 @@ async function updateType(req, res) {
   console.log("function updateType");
   try {
     const type = await db.Type.findByPk(req.params.id);
-    if (type == null)
+    if (type == null) {
       throw new Error("validationError: Type by this id not found!");
+    }
 
     if (req.body.name && type.name != req.body.name) {
       //check name
@@ -92,7 +94,7 @@ async function updateType(req, res) {
       const findTypeByName = await db.Type.findOne({
         where: { name: req.body.name }
       });
-      if (type.name !== req.body.name && findTypeByName) {
+      if (findTypeByName) {
         throw new Error(
           "validationError: тип с таким названием уже существует!"
         );
@@ -104,11 +106,13 @@ async function updateType(req, res) {
       const findTypeByNumber = await db.Type.findOne({
         where: { number: req.body.number }
       });
-      if (type.number !== req.body.number && findTypeByNumber) {
+      if (findTypeByNumber) {
         throw new Error("validationError: тип с таким номером уже существует!");
       }
       type.number = req.body.number;
     }
+
+    if (req.body.note) type.note = req.body.note;
 
     await type.save();
     res.json({ type });
@@ -123,10 +127,10 @@ async function deleteType(req, res) {
   try {
     const type = await db.Type.findByPk(req.params.id);
     if (!type) {
-      throw new Error("validationError: Type by this id is not found!");
+      throw new Error("validationError: Type by this id not found!");
     }
     await type.destroy();
-    res.json({ massage: `type with id ${type.id} is deleted` });
+    res.json({ massage: `type with id ${type.id} deleted` });
   } catch (error) {
     console.error(error);
     res.json({ errorMessage: error.message });
