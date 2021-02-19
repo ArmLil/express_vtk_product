@@ -8,14 +8,9 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      bookingDate: {
-        type: Sequelize.DATE
-      },
-      year: {
-        type: Sequelize.INTEGER
-      },
-      note: {
-        type: Sequelize.TEXT
+      number: {
+        type: Sequelize.INTEGER,
+        allowNull: false
       },
       namingId: {
         type: Sequelize.INTEGER,
@@ -35,6 +30,12 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "SET NULL"
       },
+      bookingDate: {
+        type: Sequelize.STRING
+      },
+      year: {
+        type: Sequelize.INTEGER
+      },
       locationId: {
         type: Sequelize.INTEGER,
         references: {
@@ -53,7 +54,16 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "SET NULL"
       },
-      note: {
+      serialNumber: {
+        type: Sequelize.STRING
+      },
+      noteId: {
+        type: Sequelize.INTEGER
+      },
+      employeeId: {
+        type: Sequelize.INTEGER
+      },
+      description: {
         type: Sequelize.TEXT
       },
       createdAt: {

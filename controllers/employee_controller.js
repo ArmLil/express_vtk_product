@@ -45,7 +45,7 @@ async function createEmployee(req, res) {
     if (req.body.name) {
       options.name = req.body.name;
     } else {
-      return res.status(400).send("Bad Request, name required");
+      return res.status(400).send({ "Bad Request": "name required" });
     }
 
     const findEmployeeByName = await db.Employee.findOne({

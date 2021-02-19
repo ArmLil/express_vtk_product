@@ -24,7 +24,6 @@ async function getProductById(req, res) {
   console.log("function getProductById");
   try {
     let product = await db.Product.findByPk(req.params.id);
-    console.log(product);
     if (product == null) {
       throw new Error("validationError: Product with this id not found!");
     }
@@ -39,37 +38,127 @@ async function getProductById(req, res) {
 
 async function createProduct(req, res) {
   console.log("function createProduct");
-  try {
-    const products = await db.Product.findAndCountAll();
+  let today = new Date();
+  const dd = String(today.getDate()).padStart(2, "0");
+  const mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+  const yyyy = today.getFullYear();
 
+  today = dd + "." + mm + "." + yyyy;
+  try {
     let options = {};
+
+    // define options bookingDate
+    options.bookingDate = today;
+
+    // define options year
+    options.year = yyyy;
+
+    // define options number
     if (req.body.number) {
       options.number = req.body.number;
     } else {
-      return res.status(400).send("Bad Request, number required");
-    }
-    if (req.body.name) {
-      options.name = req.body.name;
-    } else {
-      return res.status(400).send("Bad Request, name required");
+      const products = await db.Product.findAndCountAll();
+      let number = 1;
+      if (products.rows.length > 0) {
+        let byNumber = products.rows.map((product, i) => {
+          return product.number;
+        });
+        byNumber.sort(function(a, b) {
+          return a - b;
+        });
+        number = byNumber[byNumber.length - 1] + 1;
+      }
+      options.number = number;
     }
 
-    const findProductByName = await db.Product.findOne({
-      where: { name: req.body.name }
-    });
-    if (findProductByName) {
-      throw new Error("validationError: тип с таким названием уже существует");
+    // define options namingId typeId
+    if (req.body.namingId) {
+      const findNaming = await db.Naming.findByPk(req.body.namingId);
+      if (findNaming == null) {
+        throw new Error("validationError: Naming with this id not found!");
+      } else {
+        if (findNaming.typeId) options.typeId = findNaming.typeId;
+      }
+
+      options.namingId = req.body.namingId;
+    } else {
+      return res.status(400).send({ "Bad Request": "namingId required" });
     }
-    const findProductByNumber = await db.Product.findOne({
-      where: { number: req.body.number }
-    });
-    if (findProductByNumber) {
-      throw new Error("validationError: тип с таким номером уже существует");
+
+    // define options decimalNumberId
+    if (req.body.decimalNumberId) {
+      const decimalNumber = db.DecimalNumber.findByPk(req.body.decimalNumberId);
+      if (decimalNumber == null) {
+        throw new Error(
+          "validationError: decimalNumber with this id not found!"
+        );
+      }
+      options.decimalNumberId = req.body.decimalNumberId;
     }
+
+    // define options employeeId
+    if (req.body.employeeId) {
+      const employee = db.Employee.findByPk(req.body.employeeId);
+      if (employee == null) {
+        throw new Error("validationError: employee with this id not found!");
+      }
+      options.employeeId = req.body.employeeId;
+    }
+
+    // define options locationId
+    if (req.body.locationId) {
+      const location = db.Location.findByPk(req.body.locationId);
+      if (location == null) {
+        throw new Error("validationError: location with this id not found!");
+      }
+      options.locationId = req.body.locationId;
+    } else {
+      return res.status(400).send({ "Bad Request": "locationId required" });
+    }
+
+    // define options noteId
+    if (req.body.noteId) {
+      const note = db.Note.findByPk(req.body.noteId);
+      if (note == null) {
+        throw new Error("validationError: note with this id not found!");
+      }
+      options.noteId = req.body.noteId;
+    }
+
+    // define options description
+    if (req.body.description) {
+      options.description = req.body.description;
+    }
+
+    // define options serialNumber
+    const productsByYearLocType = await db.Product.findAndCountAll({
+      where: {
+        year: options.year,
+        locationId: options.locationId,
+        typeId: options.typeId
+      }
+    });
+    if (productsByYearLocType.rows.length == 0) {
+      options.serialNumber = "001";
+    } else {
+      let productsSerNumberArr = productsByYearLocType.rows.map(
+        (product, i) => {
+          return Number(product.dataValues.serialNumber);
+        }
+      );
+      productsSerNumberArr.sort(function(a, b) {
+        return a - b;
+      });
+      const maxSerialNumber =
+        productsSerNumberArr[productsSerNumberArr.length - 1];
+      let serialNumber = ("000" + (+maxSerialNumber + 1)).slice(-3);
+      options.serialNumber = serialNumber;
+    }
+
+    // save product
     const product = await db.Product.findOrCreate({
       where: options
     });
-
     res.json({ product });
   } catch (error) {
     console.error(error);
@@ -86,29 +175,61 @@ async function updateProduct(req, res) {
     if (product == null)
       throw new Error("validationError: Product by this id not found!");
 
-    if (req.body.name && product.name != req.body.name) {
-      //check name
-      //do not let the product to be updated with a name which already exists
-      const findProductByName = await db.Product.findOne({
-        where: { name: req.body.name }
-      });
-      if (product.name !== req.body.name && findProductByName) {
-        throw new Error(
-          "validationError: тип с таким названием уже существует!"
-        );
-      }
-      product.name = req.body.name;
-    }
-
-    if (req.body.number && product.number != req.body.number) {
-      const findProductByNumber = await db.Product.findOne({
-        where: { number: req.body.number }
-      });
-      if (product.number !== req.body.number && findProductByNumber) {
-        throw new Error("validationError: тип с таким номером уже существует!");
-      }
+    if (req.body.number) {
       product.number = req.body.number;
     }
+
+    if (req.body.namingId) {
+      const findNaming = await db.Naming.findByPk(namingId);
+      if (findNaming == null) {
+        throw new Error("validationError: Naming with this id not found!");
+      } else {
+        if (findNaming.typeId) product.typeId = findNaming.typeId;
+      }
+      product.namingId = req.body.namingId;
+    }
+
+    if (req.body.decimalNumberId) {
+      const decimalNumber = db.DecimalNumber.findByPk(decimalNumberId);
+      if (decimalNumber == null) {
+        throw new Error(
+          "validationError: decimalNumber with this id not found!"
+        );
+      }
+      product.decimalNumberId = req.body.decimalNumberId;
+    }
+
+    if (req.body.bookingDate) product.bookingDate = req.body.bookingDate;
+
+    if (req.body.year) product.year = req.body.year;
+
+    if (req.body.locationId) {
+      const location = db.Location.findByPk(locationId);
+      if (location == null) {
+        throw new Error("validationError: location with this id not found!");
+      }
+      product.locationId = req.body.locationId;
+    }
+
+    if (req.body.serialNumber) product.serialNumber = req.body.serialNumber;
+
+    if (req.body.noteId) {
+      const note = db.Note.findByPk(noteId);
+      if (note == null) {
+        throw new Error("validationError: note with this id not found!");
+      }
+      product.noteId = req.body.noteId;
+    }
+
+    if (req.body.employeeId) {
+      const employee = db.Employee.findByPk(employeeId);
+      if (employee == null) {
+        throw new Error("validationError: employee with this id not found!");
+      }
+      product.employeeId = req.body.employeeId;
+    }
+
+    if (req.body.description) product.description = req.body.description;
 
     await product.save();
     res.json({ product });

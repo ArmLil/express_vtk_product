@@ -7,11 +7,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      bookingDate: DataTypes.DATE,
-      year: {
-        type: DataTypes.INTEGER,
-        allowNull: false
-      },
       namingId: {
         type: DataTypes.INTEGER,
         allowNull: false
@@ -19,8 +14,10 @@ module.exports = (sequelize, DataTypes) => {
       decimalNumberId: {
         type: DataTypes.INTEGER
       },
-      employeeId: {
-        type: DataTypes.INTEGER
+      bookingDate: DataTypes.STRING,
+      year: {
+        type: DataTypes.INTEGER,
+        allowNull: false
       },
       locationId: {
         type: DataTypes.INTEGER,
@@ -31,7 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
       },
       serialNumber: DataTypes.STRING,
-      noteId: DataTypes.INTEGER,
+      noteId: {
+        type: DataTypes.INTEGER
+      },
+      employeeId: {
+        type: DataTypes.INTEGER
+      },
       description: DataTypes.TEXT
     },
     {

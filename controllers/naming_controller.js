@@ -44,7 +44,7 @@ async function createNaming(req, res) {
     if (req.body.name) {
       options.name = req.body.name;
     } else {
-      return res.status(400).send("Bad Request, name required");
+      return res.status(400).send({ "Bad Request": "name required" });
     }
 
     const findNamingByName = await db.Naming.findOne({
@@ -64,6 +64,8 @@ async function createNaming(req, res) {
         throw new Error("validationError: тип по этим данным не существует");
       }
       options.typeId = req.body.typeId;
+    } else {
+      return res.status(400).send({ "Bad Request": "typeId required" });
     }
 
     const naming = await db.Naming.findOrCreate({
