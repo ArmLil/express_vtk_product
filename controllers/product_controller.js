@@ -5,7 +5,24 @@ let db = require("../models");
 async function getProducts(req, res) {
   console.log("function getProducts");
   try {
-    let products = await db.Product.findAndCountAll();
+    let options = {};
+
+    if (req.query.bookingDate) options.bookingDay = req.query.bookingDate;
+    if (req.query.year) options.year = req.query.year;
+    if (req.query.number) options.number = req.query.number;
+    if (req.query.namingId) options.namingId = req.query.namingId;
+    if (req.query.typeId) options.typeId = req.query.typeId;
+    if (req.query.decimalNumberId)
+      options.decimalNumberId = req.query.decimalNumberId;
+    if (req.query.employeeId) options.employeeId = req.query.employeeId;
+    if (req.query.locationId) options.locationId = req.query.locationId;
+    if (req.query.noteId) options.noteId = req.query.noteId;
+    if (req.query.serialNumber) options.serialNumber = req.query.serialNumber;
+    if (req.query.description) options.description = req.query.description;
+
+    let products = await db.Product.findAndCountAll({
+      where: options
+    });
     let count = products.count;
 
     res.json({
