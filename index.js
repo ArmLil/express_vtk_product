@@ -3,16 +3,19 @@
 var express = require("express");
 var app = express();
 
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
+var server = require("http").Server(app);
+var io = require("socket.io")(server);
 
 require("dotenv").config();
-var exphbs  = require('express-handlebars');
+var exphbs = require("express-handlebars");
 const logger = require("morgan");
 const bodyParser = require("body-parser");
 //Import routes
 let api = require("./routes/api")();
 var db = require("./models");
+
+var cors = require("cors");
+app.use(cors());
 
 // Log requests to the console.
 logger.token("body", function(req, res) {
@@ -27,18 +30,16 @@ app.use(
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-
-app.get('/', function (req, res) {
-  console.log('app.get(/)');
-  res.sendFile(__dirname + '/index.html');
+app.get("/", function(req, res) {
+  console.log("app.get(/)");
+  res.sendFile(__dirname + "/index.html");
 });
 
 app.use("/api/v1/", api);
 
-app.engine('handlebars', exphbs());
-app.set('view engine', 'handlebars');
-app.set('views', 'public/views');
-
+app.engine("handlebars", exphbs());
+app.set("view engine", "handlebars");
+app.set("views", "public/views");
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -46,7 +47,6 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
-
 
 // io.on('connection', function (socket) {
 //   console.log('user connected...');
@@ -59,7 +59,7 @@ app.use(function(req, res, next) {
 //   })
 // });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // server.listen(port, '172.28.2.35', function() {
 //   console.log(`server listening on port ${port}`);
