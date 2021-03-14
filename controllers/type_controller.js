@@ -44,12 +44,12 @@ async function createType(req, res) {
     if (req.body.number) {
       options.number = req.body.number;
     } else {
-      return res.status(400).send({ "Bad Request": "namingId required" });
+      return res.status(400).send({ "Bad Request": "number required" });
     }
     if (req.body.name) {
       options.name = req.body.name;
     } else {
-      return res.status(400).send({ "Bad Request": "namingId required" });
+      return res.status(400).send({ "Bad Request": "name required" });
     }
 
     const findTypeByName = await db.Type.findOne({

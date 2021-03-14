@@ -38,7 +38,6 @@ async function getNoteById(req, res) {
 }
 
 async function createNote(req, res) {
-  console.log("function createNote");
   try {
     let options = {};
 
@@ -52,7 +51,9 @@ async function createNote(req, res) {
       where: { name: req.body.name }
     });
     if (findNoteByName) {
-      throw new Error("validationError: тип с таким названием уже существует");
+      throw new Error(
+        "validationError: наименование с таким названием уже существует"
+      );
     }
     if (req.body.description) options.description = req.body.description;
 

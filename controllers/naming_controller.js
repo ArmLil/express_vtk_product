@@ -5,7 +5,14 @@ let db = require("../models");
 async function getNamings(req, res) {
   console.log("function getNamings");
   try {
-    let namings = await db.Naming.findAndCountAll();
+    let namings = await db.Naming.findAndCountAll({
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        }
+      ]
+    });
     let count = namings.count;
 
     res.json({
@@ -57,21 +64,32 @@ async function createNaming(req, res) {
     }
 
     if (req.body.note) options.note = req.body.note;
-
-    if (req.body.typeId) {
-      let type = await db.Type.findByPk(req.body.typeId);
+    if (req.body.type) {
+      let type = await db.Type.findOne({
+        where: {
+          name: req.body.type
+        }
+      });
       if (type == null) {
         throw new Error("validationError: тип по этим данным не существует");
       }
-      options.typeId = req.body.typeId;
+      options.typeId = type.id;
     } else {
-      return res.status(400).send({ "Bad Request": "typeId required" });
+      return res.status(400).send({ "Bad Request": "type required" });
     }
 
-    const naming = await db.Naming.findOrCreate({
+    const _naming = await db.Naming.findOrCreate({
       where: options
     });
-
+    const naming = await db.Naming.findOne({
+      where: { id: _naming[0].dataValues.id },
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        }
+      ]
+    });
     res.json({ naming });
   } catch (error) {
     console.error(error);
@@ -95,6 +113,7 @@ async function updateNaming(req, res) {
       const findNamingByName = await db.Naming.findOne({
         where: { name: req.body.name }
       });
+
       if (findNamingByName) {
         throw new Error(
           "validationError: наименование с таким названием уже существует!"
@@ -104,16 +123,26 @@ async function updateNaming(req, res) {
     }
 
     if (req.body.note) naming.note = req.body.note;
-    if (req.body.typeId) {
-      let type = await db.Type.findByPk(req.body.typeId);
+    if (req.body.type) {
+      let type = await db.Type.findOne({ where: { name: req.body.type } });
+
       if (type == null) {
         throw new Error("validationError: тип по этим данным не существует");
       }
-      naming.typeId = req.body.typeId;
+      naming.typeId = type.id;
     }
 
     await naming.save();
-    res.json({ naming });
+    const _naming = await db.Naming.findOne({
+      where: { id: naming.id },
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        }
+      ]
+    });
+    res.json({ naming: _naming });
   } catch (err) {
     console.error(err);
     res.json({ errorMessage: err.message });

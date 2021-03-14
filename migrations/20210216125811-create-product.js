@@ -9,7 +9,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       number: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.STRING,
         allowNull: false
       },
       namingId: {
@@ -58,10 +58,22 @@ module.exports = {
         type: Sequelize.STRING
       },
       noteId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: "Notes", // name of Target model
+          key: "id" // key in Target model that we're referencing
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       employeeId: {
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        references: {
+          model: "Employees", // name of Target model
+          key: "id" // key in Target model that we're referencing
+        },
+        onUpdate: "CASCADE",
+        onDelete: "SET NULL"
       },
       description: {
         type: Sequelize.TEXT

@@ -21,10 +21,35 @@ async function getProducts(req, res) {
     if (req.query.description) options.description = req.query.description;
 
     let products = await db.Product.findAndCountAll({
-      where: options
+      where: options,
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        },
+        {
+          model: db.Naming,
+          as: "naming"
+        },
+        {
+          model: db.DecimalNumber,
+          as: "decimalNumber"
+        },
+        {
+          model: db.Location,
+          as: "location"
+        },
+        {
+          model: db.Note,
+          as: "note"
+        },
+        {
+          model: db.Employee,
+          as: "employee"
+        }
+      ]
     });
     let count = products.count;
-
     res.json({
       products,
       count
@@ -72,6 +97,12 @@ async function createProduct(req, res) {
 
     // define options number
     if (req.body.number) {
+      let _product = await db.Product.findOne({
+        where: { number: req.body.number }
+      });
+      if (_product) {
+        throw new Error("Изделие с таким номером уже существует.");
+      }
       options.number = req.body.number;
     } else {
       const products = await db.Product.findAndCountAll();
@@ -90,11 +121,11 @@ async function createProduct(req, res) {
 
     // define options namingId typeId
     if (req.body.namingId) {
-      const findNaming = await db.Naming.findByPk(req.body.namingId);
-      if (findNaming == null) {
+      const naming = await db.Naming.findByPk(req.body.namingId);
+      if (naming == null) {
         throw new Error("validationError: Naming with this id not found!");
       } else {
-        if (findNaming.typeId) options.typeId = findNaming.typeId;
+        if (naming.typeId) options.typeId = naming.typeId;
       }
 
       options.namingId = req.body.namingId;
@@ -173,9 +204,55 @@ async function createProduct(req, res) {
     }
 
     // save product
-    const product = await db.Product.findOrCreate({
+    const _product = await db.Product.findOrCreate({
       where: options
     });
+    const _productJSON = JSON.parse(JSON.stringify(_product[0]));
+
+    let product = await db.Product.findOne({
+      where: { id: _productJSON.id },
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        },
+        {
+          model: db.Naming,
+          as: "naming"
+        },
+        {
+          model: db.DecimalNumber,
+          as: "decimalNumber"
+        },
+        {
+          model: db.Location,
+          as: "location"
+        },
+        {
+          model: db.Note,
+          as: "note"
+        },
+        {
+          model: db.Employee,
+          as: "employee"
+        }
+      ]
+    });
+    product = JSON.parse(JSON.stringify(product));
+    if (product.type) {
+      product.typeNumber = product.type.number;
+      product.type = product.type.name;
+    }
+    if (product.location) {
+      product.locationNumber = product.location.number;
+      product.location = product.location.name;
+    }
+    if (product.decimalNumber)
+      product.decimalNumber = product.decimalNumber.name;
+    if (product.naming) product.naming = product.naming.name;
+    if (product.note) product.note = product.note.name;
+    if (product.employee) product.employee = product.employee.name;
+    console.log({ product });
     res.json({ product });
   } catch (error) {
     console.error(error);
@@ -197,7 +274,7 @@ async function updateProduct(req, res) {
     }
 
     if (req.body.namingId) {
-      const findNaming = await db.Naming.findByPk(namingId);
+      const findNaming = await db.Naming.findByPk(req.body.namingId);
       if (findNaming == null) {
         throw new Error("validationError: Naming with this id not found!");
       } else {
@@ -207,7 +284,7 @@ async function updateProduct(req, res) {
     }
 
     if (req.body.decimalNumberId) {
-      const decimalNumber = db.DecimalNumber.findByPk(decimalNumberId);
+      const decimalNumber = db.DecimalNumber.findByPk(req.body.decimalNumberId);
       if (decimalNumber == null) {
         throw new Error(
           "validationError: decimalNumber with this id not found!"
@@ -221,7 +298,7 @@ async function updateProduct(req, res) {
     if (req.body.year) product.year = req.body.year;
 
     if (req.body.locationId) {
-      const location = db.Location.findByPk(locationId);
+      const location = db.Location.findByPk(req.body.locationId);
       if (location == null) {
         throw new Error("validationError: location with this id not found!");
       }
@@ -231,7 +308,7 @@ async function updateProduct(req, res) {
     if (req.body.serialNumber) product.serialNumber = req.body.serialNumber;
 
     if (req.body.noteId) {
-      const note = db.Note.findByPk(noteId);
+      const note = db.Note.findByPk(req.body.noteId);
       if (note == null) {
         throw new Error("validationError: note with this id not found!");
       }
@@ -239,7 +316,7 @@ async function updateProduct(req, res) {
     }
 
     if (req.body.employeeId) {
-      const employee = db.Employee.findByPk(employeeId);
+      const employee = db.Employee.findByPk(req.body.employeeId);
       if (employee == null) {
         throw new Error("validationError: employee with this id not found!");
       }
@@ -249,7 +326,53 @@ async function updateProduct(req, res) {
     if (req.body.description) product.description = req.body.description;
 
     await product.save();
-    res.json({ product });
+
+    let _product = await db.Product.findOne({
+      where: { id: product.id },
+      include: [
+        {
+          model: db.Type,
+          as: "type"
+        },
+        {
+          model: db.Naming,
+          as: "naming"
+        },
+        {
+          model: db.DecimalNumber,
+          as: "decimalNumber"
+        },
+        {
+          model: db.Location,
+          as: "location"
+        },
+        {
+          model: db.Note,
+          as: "note"
+        },
+        {
+          model: db.Employee,
+          as: "employee"
+        }
+      ]
+    });
+    _product = JSON.parse(JSON.stringify(_product));
+
+    if (_product.type) {
+      _product.typeNumber = _product.type.number;
+      _product.type = _product.type.name;
+    }
+    if (_product.location) {
+      _product.locationNumber = _product.location.number;
+      _product.location = _product.location.name;
+    }
+    if (_product.decimalNumber)
+      _product.decimalNumber = _product.decimalNumber.name;
+    if (_product.naming) _product.naming = _product.naming.name;
+    if (_product.note) _product.note = _product.note.name;
+    if (_product.employee) _product.employee = _product.employee.name;
+
+    res.json({ product: _product });
   } catch (err) {
     console.error(err);
     res.json({ errorMessage: err.message });

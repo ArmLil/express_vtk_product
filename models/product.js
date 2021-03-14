@@ -4,7 +4,7 @@ module.exports = (sequelize, DataTypes) => {
     "Product",
     {
       number: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
         allowNull: false
       },
       namingId: {
@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "decimalNumberId"
     });
     Product.belongsTo(models.Naming, {
-      as: "name",
+      as: "naming",
       targetKey: "id",
       foreignKey: "namingId"
     });
