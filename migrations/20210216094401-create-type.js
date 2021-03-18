@@ -9,10 +9,12 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       number: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       name: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING,
+        allowNull: false
       },
       note: {
         type: Sequelize.TEXT
