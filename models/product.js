@@ -11,8 +11,8 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      decimalNumberId: {
-        type: DataTypes.INTEGER
+      decimalNumber: {
+        type: DataTypes.STRING
       },
       bookingDate: DataTypes.STRING,
       year: {
@@ -28,13 +28,12 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false
       },
       serialNumber: DataTypes.STRING,
-      noteId: {
-        type: DataTypes.INTEGER
+      note: {
+        type: DataTypes.STRING
       },
       employeeId: {
         type: DataTypes.INTEGER
-      },
-      description: DataTypes.TEXT
+      }
     },
     {
       timestamps: true,
@@ -44,11 +43,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
   Product.associate = function(models) {
-    Product.belongsTo(models.DecimalNumber, {
-      as: "decimalNumber",
-      targetKey: "id",
-      foreignKey: "decimalNumberId"
-    });
     Product.belongsTo(models.Naming, {
       as: "naming",
       targetKey: "id",
@@ -58,11 +52,6 @@ module.exports = (sequelize, DataTypes) => {
       as: "location",
       targetKey: "id",
       foreignKey: "locationId"
-    });
-    Product.belongsTo(models.Note, {
-      as: "note",
-      targetKey: "id",
-      foreignKey: "noteId"
     });
     Product.belongsTo(models.Type, {
       as: "type",

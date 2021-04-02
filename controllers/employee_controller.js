@@ -47,16 +47,13 @@ async function createEmployee(req, res) {
     } else {
       return res.status(400).send({ "Bad Request": "name required" });
     }
-
-    const findEmployeeByName = await db.Employee.findOne({
-      where: { name: req.body.name }
-    });
-    if (findEmployeeByName) {
-      throw new Error(
-        "validationError: сотрудник с таким названием уже существует"
-      );
+    if (req.body.secondName) {
+      options.secondName = req.body.secondName;
+    } else {
+      return res.status(400).send({ "Bad Request": "secondName required" });
     }
 
+    if (req.body.fatherName) options.fatherName = req.body.fatherName;
     if (req.body.note) options.note = req.body.note;
 
     const employee = await db.Employee.findOrCreate({
@@ -73,27 +70,25 @@ async function createEmployee(req, res) {
 }
 
 async function updateEmployee(req, res) {
-  console.log("function updateEmployee");
+  console.log("function updateEmployee", req.body);
   try {
     const employee = await db.Employee.findByPk(req.params.id);
     if (employee == null)
       throw new Error("validationError: Employee by this id not found!");
 
     if (req.body.name && employee.name != req.body.name) {
-      //check name
-      //do not let the employee to be updated with a name which already exists
-      const findEmployeeByName = await db.Employee.findOne({
-        where: { name: req.body.name }
-      });
-      if (employee.name !== req.body.name && findEmployeeByName) {
-        throw new Error(
-          "validationError: сщтрудник с таким названием уже существует!"
-        );
-      }
       employee.name = req.body.name;
     }
-    if (req.body.note) employee.note = req.body.note;
-
+    if (req.body.secondName && employee.secondName != req.body.secondName) {
+      employee.secondName = req.body.secondName;
+    }
+    if (req.body.fatherName && employee.fatherName != req.body.fatherName) {
+      employee.fatherName = req.body.fatherName;
+    }
+    if (req.body.note && employee.note != req.body.note) {
+      employee.note = req.body.note;
+    }
+    console.log({ employee });
     await employee.save();
     res.json({ employee });
   } catch (err) {

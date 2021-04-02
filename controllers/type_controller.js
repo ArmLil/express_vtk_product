@@ -24,7 +24,6 @@ async function getTypeById(req, res) {
   console.log("function getTypeById");
   try {
     let type = await db.Type.findByPk(req.params.id);
-    console.log(type);
     if (type == null) {
       throw new Error("validationError: Type with this id not found!");
     }
@@ -42,10 +41,33 @@ async function createType(req, res) {
   try {
     let options = {};
     if (req.body.number) {
+      let _type = await db.Type.findOne({
+        where: { number: req.body.number }
+      });
+      if (_type) {
+        throw new Error("Тип с таким номером уже существует.");
+      }
       options.number = req.body.number;
     } else {
-      return res.status(400).send({ "Bad Request": "number required" });
+      const typesByNumbers = await db.Type.findAndCountAll();
+      if (typesByNumbers.rows.length == 0) {
+        options.number = "01";
+      } else {
+        let typesByNumbersArr = typesByNumbers.rows.map((type, i) => {
+          return Number(type.dataValues.number);
+        });
+        typesByNumbersArr.sort(function(a, b) {
+          return a - b;
+        });
+        const maxNumber = typesByNumbersArr[typesByNumbersArr.length - 1];
+        let number = (+maxNumber + 1).toString();
+        if (maxNumber.toString().length < 3) {
+          number = ("00" + (+maxNumber + 1)).slice(-2);
+        }
+        options.number = number;
+      }
     }
+
     if (req.body.name) {
       options.name = req.body.name;
     } else {

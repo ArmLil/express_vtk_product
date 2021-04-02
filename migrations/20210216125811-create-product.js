@@ -21,14 +21,8 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "SET NULL"
       },
-      decimalNumberId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "DecimalNumbers", // name of Target model
-          key: "id" // key in Target model that we're referencing
-        },
-        onUpdate: "CASCADE",
-        onDelete: "SET NULL"
+      decimalNumber: {
+        type: Sequelize.STRING
       },
       bookingDate: {
         type: Sequelize.STRING
@@ -57,14 +51,8 @@ module.exports = {
       serialNumber: {
         type: Sequelize.STRING
       },
-      noteId: {
-        type: Sequelize.INTEGER,
-        references: {
-          model: "Notes", // name of Target model
-          key: "id" // key in Target model that we're referencing
-        },
-        onUpdate: "CASCADE",
-        onDelete: "SET NULL"
+      note: {
+        type: Sequelize.STRING
       },
       employeeId: {
         type: Sequelize.INTEGER,
@@ -74,9 +62,6 @@ module.exports = {
         },
         onUpdate: "CASCADE",
         onDelete: "SET NULL"
-      },
-      description: {
-        type: Sequelize.TEXT
       },
       createdAt: {
         allowNull: false,

@@ -12,13 +12,9 @@ async function getProducts(req, res) {
     if (req.query.number) options.number = req.query.number;
     if (req.query.namingId) options.namingId = req.query.namingId;
     if (req.query.typeId) options.typeId = req.query.typeId;
-    if (req.query.decimalNumberId)
-      options.decimalNumberId = req.query.decimalNumberId;
     if (req.query.employeeId) options.employeeId = req.query.employeeId;
     if (req.query.locationId) options.locationId = req.query.locationId;
-    if (req.query.noteId) options.noteId = req.query.noteId;
     if (req.query.serialNumber) options.serialNumber = req.query.serialNumber;
-    if (req.query.description) options.description = req.query.description;
 
     let products = await db.Product.findAndCountAll({
       where: options,
@@ -32,16 +28,8 @@ async function getProducts(req, res) {
           as: "naming"
         },
         {
-          model: db.DecimalNumber,
-          as: "decimalNumber"
-        },
-        {
           model: db.Location,
           as: "location"
-        },
-        {
-          model: db.Note,
-          as: "note"
         },
         {
           model: db.Employee,
@@ -93,7 +81,7 @@ async function createProduct(req, res) {
     options.bookingDate = today;
 
     // define options year
-    options.year = yyyy;
+    options.year = yyyy.toString().slice(-2);
 
     // define options number
     if (req.body.number) {
@@ -119,29 +107,19 @@ async function createProduct(req, res) {
       options.number = number;
     }
 
-    // define options namingId typeId
+    // define options namingId typeId decimalNumber
     if (req.body.namingId) {
       const naming = await db.Naming.findByPk(req.body.namingId);
       if (naming == null) {
         throw new Error("validationError: Naming with this id not found!");
       } else {
         if (naming.typeId) options.typeId = naming.typeId;
+        if (naming.decimalNumber) options.decimalNumber = naming.decimalNumber;
       }
 
       options.namingId = req.body.namingId;
     } else {
       return res.status(400).send({ "Bad Request": "namingId required" });
-    }
-
-    // define options decimalNumberId
-    if (req.body.decimalNumberId) {
-      const decimalNumber = db.DecimalNumber.findByPk(req.body.decimalNumberId);
-      if (decimalNumber == null) {
-        throw new Error(
-          "validationError: decimalNumber with this id not found!"
-        );
-      }
-      options.decimalNumberId = req.body.decimalNumberId;
     }
 
     // define options employeeId
@@ -171,11 +149,6 @@ async function createProduct(req, res) {
         throw new Error("validationError: note with this id not found!");
       }
       options.noteId = req.body.noteId;
-    }
-
-    // define options description
-    if (req.body.description) {
-      options.description = req.body.description;
     }
 
     // define options serialNumber
@@ -221,10 +194,6 @@ async function createProduct(req, res) {
           as: "naming"
         },
         {
-          model: db.DecimalNumber,
-          as: "decimalNumber"
-        },
-        {
           model: db.Location,
           as: "location"
         },
@@ -247,9 +216,13 @@ async function createProduct(req, res) {
       product.locationNumber = product.location.number;
       product.location = product.location.name;
     }
-    if (product.decimalNumber)
-      product.decimalNumber = product.decimalNumber.name;
-    if (product.naming) product.naming = product.naming.name;
+
+    if (product.naming) {
+      product.naming = product.naming.name;
+      if (product.naming.decimalNumber) {
+        product.decimalNumber = product.naming.decimalNumber;
+      }
+    }
     if (product.note) product.note = product.note.name;
     if (product.employee) product.employee = product.employee.name;
     console.log({ product });
@@ -322,8 +295,6 @@ async function updateProduct(req, res) {
       }
       product.employeeId = req.body.employeeId;
     }
-
-    if (req.body.description) product.description = req.body.description;
 
     await product.save();
 

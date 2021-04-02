@@ -12,6 +12,13 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      secondName: {
+        type: Sequelize.STRING,
+        allowNull: false
+      },
+      fatherName: {
+        type: Sequelize.STRING
+      },
       note: {
         type: Sequelize.TEXT
       },

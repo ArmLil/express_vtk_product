@@ -6,9 +6,7 @@ module.exports = app => {
   const types = require("../controllers/type_controller");
   const locations = require("../controllers/location_controller");
   const namings = require("../controllers/naming_controller");
-  const decimalNumbers = require("../controllers/decimalNumber_controller");
   const employees = require("../controllers/employee_controller");
-  const notes = require("../controllers/note_controller");
   const products = require("../controllers/product_controller");
   const users = require("../controllers/user_controller");
   const auth = require("../controllers/auth_controller");
@@ -37,23 +35,11 @@ module.exports = app => {
   router.put("/namings/:id", namings.updateNaming);
   router.delete("/namings/:id", namings.deleteNaming);
 
-  router.get("/decimalNumbers", decimalNumbers.getDecimalNumbers);
-  router.get("/decimalNumbers/:id", decimalNumbers.getDecimalNumberById);
-  router.post("/decimalNumbers", decimalNumbers.createDecimalNumber);
-  router.put("/decimalNumbers/:id", decimalNumbers.updateDecimalNumber);
-  router.delete("/decimalNumbers/:id", decimalNumbers.deleteDecimalNumber);
-
   router.get("/employees", employees.getEmployees);
   router.get("/employees/:id", employees.getEmployeeById);
   router.post("/employees", employees.createEmployee);
   router.put("/employees/:id", employees.updateEmployee);
   router.delete("/employees/:id", employees.deleteEmployee);
-
-  router.get("/notes", notes.getNotes);
-  router.get("/notes/:id", notes.getNoteById);
-  router.post("/notes", notes.createNote);
-  router.put("/notes/:id", notes.updateNote);
-  router.delete("/notes/:id", notes.deleteNote);
 
   router.get("/products", products.getProducts);
   router.get("/products/:id", products.getProductById);

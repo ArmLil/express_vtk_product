@@ -40,10 +40,35 @@ async function createLocation(req, res) {
   console.log("function createLocation");
   try {
     let options = {};
+    console.log(req.body.number);
     if (req.body.number) {
+      console.log("if if");
+      let _location = await db.Location.findOne({
+        where: { number: req.body.number }
+      });
+      if (_location) {
+        throw new Error("Место производства с таким номером уже существует.");
+      }
       options.number = req.body.number;
     } else {
-      return res.status(400).send({ "Bad Request": "number required" });
+      const locationsByNumbers = await db.Location.findAndCountAll();
+      if (locationsByNumbers.rows.length == 0) {
+        options.number = "01";
+      } else {
+        let locationsByNumbersArr = locationsByNumbers.rows.map((loc, i) => {
+          return Number(loc.dataValues.number);
+        });
+        locationsByNumbersArr.sort(function(a, b) {
+          return a - b;
+        });
+        const maxNumber =
+          locationsByNumbersArr[locationsByNumbersArr.length - 1];
+        let number = (+maxNumber + 1).toString();
+        if (maxNumber.toString().length < 3) {
+          number = ("00" + (+maxNumber + 1)).slice(-2);
+        }
+        options.number = number;
+      }
     }
     if (req.body.name) {
       options.name = req.body.name;
@@ -56,18 +81,7 @@ async function createLocation(req, res) {
       where: { name: req.body.name }
     });
     if (findLocationByName) {
-      throw new Error(
-        "validationError: место производства с таким названием уже существует"
-      );
-    }
-
-    const findLocationByNumber = await db.Location.findOne({
-      where: { number: req.body.number }
-    });
-    if (findLocationByNumber) {
-      throw new Error(
-        "validationError: место производства с таким номером уже существует"
-      );
+      throw new Error("Место производства с таким названием уже существует");
     }
 
     if (req.body.note) options.note = req.body.note;
@@ -100,9 +114,7 @@ async function updateLocation(req, res) {
         where: { name: req.body.name }
       });
       if (findLocationByName) {
-        throw new Error(
-          "validationError: тип с таким названием уже существует!"
-        );
+        throw new Error("Тип с таким названием уже существует!");
       }
       location.name = req.body.name;
     }
@@ -112,7 +124,7 @@ async function updateLocation(req, res) {
         where: { number: req.body.number }
       });
       if (findLocationByNumber) {
-        throw new Error("validationError: тип с таким номером уже существует!");
+        throw new Error("Тип с таким номером уже существует!");
       }
       location.number = req.body.number;
     }

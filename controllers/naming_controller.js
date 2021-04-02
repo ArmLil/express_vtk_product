@@ -54,15 +54,22 @@ async function createNaming(req, res) {
       return res.status(400).send({ "Bad Request": "name required" });
     }
 
-    const findNamingByName = await db.Naming.findOne({
-      where: { name: req.body.name }
-    });
-    if (findNamingByName) {
-      throw new Error(
-        "validationError: наименование с таким названием уже существует"
-      );
-    }
+    if (req.body.decimalNumber) {
+      options.decimalNumber = req.body.decimalNumber;
 
+      const findNamingByNameDecNumber = await db.Naming.findOne({
+        where: {
+          name: req.body.name,
+          decimalNumber: req.body.decimalNumber
+        }
+      });
+
+      if (findNamingByNameDecNumber) {
+        throw new Error(
+          "validationError: наименование с таким названием и децимальным номером уже существует"
+        );
+      }
+    }
     if (req.body.note) options.note = req.body.note;
     if (req.body.type) {
       let type = await db.Type.findOne({
@@ -107,19 +114,26 @@ async function updateNaming(req, res) {
       throw new Error("validationError: Naming by this id not found!");
     }
 
-    if (req.body.name && naming.name != req.body.name) {
-      //check name
-      //do not let the name to be updated with a name which already exists
-      const findNamingByName = await db.Naming.findOne({
-        where: { name: req.body.name }
+    if (
+      (req.body.name && naming.name != req.body.name) ||
+      (req.body.decimalNumber && naming.decimalNumber != req.body.decimalNumber)
+    ) {
+      //check name, decimalNumber
+      //do not let the name, decimalNumber to be updated with a name, decimalNumber which already exist
+      const findNamingByNameDecNumber = await db.Naming.findOne({
+        where: {
+          name: req.body.name,
+          decimalNumber: req.body.decimalNumber
+        }
       });
 
-      if (findNamingByName) {
+      if (findNamingByNameDecNumber) {
         throw new Error(
-          "validationError: наименование с таким названием уже существует!"
+          "validationError: наименование с таким названием и децимальным номером уже существует!"
         );
       }
       naming.name = req.body.name;
+      naming.decimalNumber = req.body.decimalNumber;
     }
 
     if (req.body.note) naming.note = req.body.note;

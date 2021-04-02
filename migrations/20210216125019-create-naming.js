@@ -12,6 +12,9 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      decimalNumber: {
+        type: Sequelize.STRING
+      },
       typeId: {
         type: Sequelize.INTEGER,
         references: {
