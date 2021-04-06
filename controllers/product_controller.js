@@ -198,10 +198,6 @@ async function createProduct(req, res) {
           as: "location"
         },
         {
-          model: db.Note,
-          as: "note"
-        },
-        {
           model: db.Employee,
           as: "employee"
         }
@@ -219,12 +215,12 @@ async function createProduct(req, res) {
 
     if (product.naming) {
       product.naming = product.naming.name;
-      if (product.naming.decimalNumber) {
-        product.decimalNumber = product.naming.decimalNumber;
-      }
     }
     if (product.note) product.note = product.note.name;
-    if (product.employee) product.employee = product.employee.name;
+    if (product.employee)
+      product.employee = `${product.employee.name} ${
+        product.employee.secondName[0]
+      }.${product.employee.fatherName[0]}.`;
     console.log({ product });
     res.json({ product });
   } catch (error) {
