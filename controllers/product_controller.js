@@ -7,7 +7,7 @@ async function getProducts(req, res) {
   try {
     let options = {};
 
-    if (req.query.bookingDate) options.bookingDay = req.query.bookingDate;
+    if (req.query.bookingDate) options.bookingDate = req.query.bookingDate;
     if (req.query.year) options.year = req.query.year;
     if (req.query.number) options.number = req.query.number;
     if (req.query.namingId) options.namingId = req.query.namingId;
@@ -78,10 +78,17 @@ async function createProduct(req, res) {
     let options = {};
 
     // define options bookingDate
-    options.bookingDate = today;
+    if (req.body.bookingDate) {
+      options.bookingDate = req.body.bookingDate;
+    } else {
+      options.bookingDate = today;
+    }
 
     // define options year
-    options.year = yyyy.toString().slice(-2);
+    options.year = options.bookingDate.slice(-2);
+
+    // define options note
+    if (req.body.note) options.note = req.body.note;
 
     // define options number
     if (req.body.number) {
@@ -142,15 +149,6 @@ async function createProduct(req, res) {
       return res.status(400).send({ "Bad Request": "locationId required" });
     }
 
-    // define options noteId
-    if (req.body.noteId) {
-      const note = db.Note.findByPk(req.body.noteId);
-      if (note == null) {
-        throw new Error("validationError: note with this id not found!");
-      }
-      options.noteId = req.body.noteId;
-    }
-
     // define options serialNumber
     const productsByYearLocType = await db.Product.findAndCountAll({
       where: {
@@ -203,6 +201,7 @@ async function createProduct(req, res) {
         }
       ]
     });
+    console.log({ product });
     product = JSON.parse(JSON.stringify(product));
     if (product.type) {
       product.typeNumber = product.type.number;
@@ -216,11 +215,12 @@ async function createProduct(req, res) {
     if (product.naming) {
       product.naming = product.naming.name;
     }
-    if (product.note) product.note = product.note.name;
-    if (product.employee)
+
+    if (product.employee) {
       product.employee = `${product.employee.name} ${
         product.employee.secondName[0]
       }.${product.employee.fatherName[0]}.`;
+    }
     console.log({ product });
     res.json({ product });
   } catch (error) {
@@ -232,39 +232,39 @@ async function createProduct(req, res) {
 }
 
 async function updateProduct(req, res) {
-  console.log("function updateProduct");
+  console.log("function updateProduct", req.body);
   try {
     const product = await db.Product.findByPk(req.params.id);
     if (product == null)
       throw new Error("validationError: Product by this id not found!");
 
     if (req.body.number) {
+      let _product = await db.Product.findOne({
+        where: { number: req.body.number }
+      });
+      if (_product && _product.number !== req.body.number) {
+        throw new Error("Изделие с таким номером уже существует.");
+      }
       product.number = req.body.number;
     }
 
     if (req.body.namingId) {
       const findNaming = await db.Naming.findByPk(req.body.namingId);
+      console.log({ findNaming });
       if (findNaming == null) {
         throw new Error("validationError: Naming with this id not found!");
       } else {
         if (findNaming.typeId) product.typeId = findNaming.typeId;
+        if (findNaming.decimalNumber)
+          product.decimalNumber = findNaming.decimalNumber;
       }
       product.namingId = req.body.namingId;
     }
 
-    if (req.body.decimalNumberId) {
-      const decimalNumber = db.DecimalNumber.findByPk(req.body.decimalNumberId);
-      if (decimalNumber == null) {
-        throw new Error(
-          "validationError: decimalNumber with this id not found!"
-        );
-      }
-      product.decimalNumberId = req.body.decimalNumberId;
+    if (req.body.bookingDate) {
+      product.bookingDate = req.body.bookingDate;
+      product.year = product.bookingDate.slice(-2);
     }
-
-    if (req.body.bookingDate) product.bookingDate = req.body.bookingDate;
-
-    if (req.body.year) product.year = req.body.year;
 
     if (req.body.locationId) {
       const location = db.Location.findByPk(req.body.locationId);
@@ -276,12 +276,8 @@ async function updateProduct(req, res) {
 
     if (req.body.serialNumber) product.serialNumber = req.body.serialNumber;
 
-    if (req.body.noteId) {
-      const note = db.Note.findByPk(req.body.noteId);
-      if (note == null) {
-        throw new Error("validationError: note with this id not found!");
-      }
-      product.noteId = req.body.noteId;
+    if (req.body.note) {
+      product.note = req.body.note;
     }
 
     if (req.body.employeeId) {
@@ -306,16 +302,8 @@ async function updateProduct(req, res) {
           as: "naming"
         },
         {
-          model: db.DecimalNumber,
-          as: "decimalNumber"
-        },
-        {
           model: db.Location,
           as: "location"
-        },
-        {
-          model: db.Note,
-          as: "note"
         },
         {
           model: db.Employee,
@@ -333,10 +321,12 @@ async function updateProduct(req, res) {
       _product.locationNumber = _product.location.number;
       _product.location = _product.location.name;
     }
-    if (_product.decimalNumber)
-      _product.decimalNumber = _product.decimalNumber.name;
+
+    if (_product.bookingDate) {
+      product.year = _product.bookingDate.slice(-2);
+    }
     if (_product.naming) _product.naming = _product.naming.name;
-    if (_product.note) _product.note = _product.note.name;
+
     if (_product.employee) _product.employee = _product.employee.name;
 
     res.json({ product: _product });
