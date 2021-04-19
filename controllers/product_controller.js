@@ -25,7 +25,13 @@ async function getProducts(req, res) {
         },
         {
           model: db.Naming,
-          as: "naming"
+          as: "naming",
+          include: [
+            {
+              model: db.Type,
+              as: "type"
+            }
+          ]
         },
         {
           model: db.Location,
@@ -201,7 +207,6 @@ async function createProduct(req, res) {
         }
       ]
     });
-    console.log({ product });
     product = JSON.parse(JSON.stringify(product));
     if (product.type) {
       product.typeNumber = product.type.number;
@@ -221,7 +226,6 @@ async function createProduct(req, res) {
         product.employee.secondName[0]
       }.${product.employee.fatherName[0]}.`;
     }
-    console.log({ product });
     res.json({ product });
   } catch (error) {
     console.error(error);
